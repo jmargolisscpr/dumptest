@@ -256,7 +256,12 @@
       font-size: 11px; color: var(--text-dim); margin-bottom: 6px;
     }
     .prog-track { height: 2px; background: var(--border); overflow: hidden; }
-    .prog-bar { height: 100%; background: var(--pp-accent); width: 0%; transition: width 0.15s ease; }
+    .prog-bar { height: 100%; background: var(--pp-accent); width: 0%; transition: width 0.4s ease; }
+    .prog-bar.sending { animation: bar-pulse 1.8s ease-in-out infinite; }
+    @keyframes bar-pulse {
+      0%, 100% { opacity: 1; }
+      50%       { opacity: 0.55; }
+    }
     .prog-pct {
       font-family: 'Inter', sans-serif;
       font-size: 11px; color: var(--text-dim); text-align: right; margin-top: 4px;
@@ -1093,14 +1098,30 @@ async function sendFile(url, payload, onEncodeProgress) {
     submissionKey: CFG.SUBMISSION_KEY,
   });
 
-  /* Step 2: send — no-cors means fire-and-forget, no response read */
-  await fetch(url, {
-    method: 'POST',
-    mode:   'no-cors',
-    body:   body,
-    /* No Content-Type header: browser sends as text/plain automatically,
-       which Google Apps Script reads via e.postData.contents */
-  });
+  /* Step 2: send — no-cors means fire-and-forget, no response read.
+     We can't get real upload progress, so we slowly creep the bar
+     from 90→97% while waiting, so it doesn't appear frozen.
+     Apps Script cold-start can take 10-20s on first request. */
+  let creepPct = 90;
+  document.getElementById('prog-bar').classList.add('sending');
+  const creep = setInterval(() => {
+    if (creepPct < 97) {
+      creepPct = Math.min(97, creepPct + 0.4);
+      document.getElementById('prog-bar').style.width = creepPct.toFixed(1) + '%';
+      document.getElementById('prog-pct').textContent = Math.round(creepPct) + '%';
+    }
+  }, 400);
+
+  try {
+    await fetch(url, {
+      method: 'POST',
+      mode:   'no-cors',
+      body:   body,
+    });
+  } finally {
+    clearInterval(creep);
+    document.getElementById('prog-bar').classList.remove('sending');
+  }
 
   return { status: 'ok' };
 }

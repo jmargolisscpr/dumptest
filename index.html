@@ -1,0 +1,1045 @@
+<!DOCTYPE html>
+<!--
+  ================================================================
+  MOJAVE DESERT ILLEGAL DUMPING REPORTER — v2
+  ================================================================
+  CONFIG VALUES TO SET BEFORE GOING LIVE:
+  1. BACKEND_URL  — your Google Apps Script deployment URL
+  2. CONTACT_EMAIL — your newsroom email
+  3. PUBLICATION  — your project/publication name
+  4. TEST_MODE    — set to FALSE for production
+                    (re-enables geographic restrictions)
+  ================================================================
+-->
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <meta name="theme-color" content="#ede9de">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <title>Document Illegal Dumping — Mojave Desert</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;0,900;1,400&family=EB+Garamond:ital,wght@0,400;0,500;0,600;1,400&display=swap" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/exifr@7.1.3/dist/full.umd.js"></script>
+  <style>
+    :root {
+      --cream:      #ede9de;
+      --cream-mid:  #e4e0d4;
+      --cream-dark: #d8d3c5;
+      --green:      #1b4020;
+      --green-mid:  #2c6432;
+      --green-lt:   #487f4e;
+      --tan:        #a4936a;
+      --tan-lt:     #c6b98e;
+      --txt:        #182e1a;
+      --txt-body:   #283028;
+      --txt-muted:  #64754a;
+      --err-bg:     #f5dada; --err-txt: #7a1818; --err-bdr: #d09090;
+      --ok-bg:      #d8ebd8; --ok-txt:  #183818; --ok-bdr:  #8ac08a;
+      --warn-bg:    #f0e8d0; --warn-txt: #604810; --warn-bdr: #d0b870;
+      --info-bg:    #e8e4d8; --info-txt: #3a4a2a; --info-bdr: #b8ad90;
+    }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html { scroll-behavior: smooth; -webkit-tap-highlight-color: transparent; }
+    body {
+      background: var(--cream);
+      color: var(--txt-body);
+      font-family: 'EB Garamond', Georgia, serif;
+      font-size: 18px;
+      line-height: 1.62;
+      padding-bottom: 64px;
+    }
+    .wrap { max-width: 580px; margin: 0 auto; padding: 0 22px; }
+
+    /* TEST MODE BANNER */
+    .test-banner {
+      background: #7a4a00;
+      color: #ffe8b0;
+      text-align: center;
+      font-size: 13px;
+      padding: 8px 16px;
+      letter-spacing: 0.05em;
+      display: none;
+    }
+    .test-banner.on { display: block; }
+
+    /* MASTHEAD */
+    .masthead { padding: 28px 22px 0; max-width: 580px; margin: 0 auto; }
+    .eyebrow {
+      font-size: 11.5px; letter-spacing: 0.2em;
+      text-transform: uppercase; color: var(--green-lt);
+      font-family: 'EB Garamond', Georgia, serif;
+    }
+    .rule { height: 2px; background: var(--green); margin: 10px 0 18px; }
+    h1 {
+      font-family: 'Playfair Display', Georgia, serif;
+      font-size: clamp(32px, 9.5vw, 50px);
+      font-weight: 900; color: var(--green);
+      line-height: 1.08; letter-spacing: -0.01em;
+      margin-bottom: 14px;
+    }
+    .intro {
+      font-size: 16.5px; color: var(--txt-muted);
+      line-height: 1.68;
+      border-bottom: 1px solid var(--tan-lt);
+      padding-bottom: 22px; margin-bottom: 4px;
+    }
+
+    /* SIGNAL CTA in intro area */
+    .signal-cta {
+      display: inline-flex; align-items: center; gap: 7px;
+      font-size: 14px; color: var(--green-mid);
+      margin-top: 10px;
+      font-style: normal;
+    }
+    .signal-cta strong { color: var(--green); }
+
+    /* STEPS */
+    .step { margin-top: 26px; }
+    .step-hd { display: flex; align-items: baseline; gap: 13px; margin-bottom: 12px; }
+    .step-n {
+      display: inline-flex; align-items: center; justify-content: center;
+      width: 28px; height: 28px; min-width: 28px;
+      border: 2px solid var(--green); border-radius: 50%;
+      font-family: 'Playfair Display', Georgia, serif;
+      font-size: 14px; font-weight: 700; color: var(--green);
+      flex-shrink: 0; position: relative; top: -1px;
+    }
+    .step-title {
+      font-family: 'Playfair Display', Georgia, serif;
+      font-size: 21px; font-weight: 700; color: var(--green); line-height: 1.2;
+    }
+    .step-sub { font-size: 14px; color: var(--txt-muted); font-style: italic; margin: -6px 0 13px 41px; }
+
+    /* DROP ZONE */
+    .drop-zone {
+      position: relative;
+      border: 2px dashed var(--tan); border-radius: 3px;
+      background: var(--cream-mid);
+      padding: 32px 20px; text-align: center; cursor: pointer;
+      transition: border-color 0.14s, background 0.14s;
+      -webkit-user-select: none; user-select: none;
+    }
+    .drop-zone:active, .drop-zone.over { border-color: var(--green-mid); background: var(--cream-dark); }
+    .drop-zone input[type="file"] {
+      position: absolute; inset: 0; opacity: 0; cursor: pointer; font-size: 0;
+    }
+    .drop-icon { font-size: 28px; display: block; margin-bottom: 8px; pointer-events: none; }
+    .drop-cta {
+      font-family: 'Playfair Display', Georgia, serif;
+      font-size: 18px; font-weight: 700; color: var(--green); pointer-events: none;
+    }
+    .drop-hint { font-size: 13px; color: var(--txt-muted); margin-top: 5px; pointer-events: none; }
+
+    /* FILE LIST */
+    .file-list { margin-top: 14px; display: flex; flex-direction: column; gap: 10px; }
+    .fi {
+      display: flex; align-items: flex-start; gap: 12px;
+      background: var(--cream-mid);
+      border: 1px solid var(--tan-lt); border-radius: 3px;
+      padding: 10px 12px;
+      position: relative;
+    }
+    .fi-thumb {
+      width: 56px; height: 56px; min-width: 56px;
+      border-radius: 2px; overflow: hidden;
+      background: var(--cream-dark);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 22px; flex-shrink: 0;
+    }
+    .fi-thumb img { width: 100%; height: 100%; object-fit: cover; display: block; }
+    .fi-body { flex: 1; min-width: 0; }
+    .fi-name {
+      font-size: 14px; font-weight: 600; color: var(--txt);
+      white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+      margin-bottom: 2px;
+    }
+    .fi-meta { font-size: 12px; color: var(--txt-muted); margin-bottom: 5px; }
+    .fi-badge {
+      display: inline-flex; align-items: center; gap: 5px;
+      font-size: 12.5px; padding: 3px 8px; border-radius: 2px;
+    }
+    .fi-badge.ok   { background: var(--ok-bg);   color: var(--ok-txt);   border: 1px solid var(--ok-bdr); }
+    .fi-badge.err  { background: var(--err-bg);  color: var(--err-txt);  border: 1px solid var(--err-bdr); }
+    .fi-badge.warn { background: var(--warn-bg); color: var(--warn-txt); border: 1px solid var(--warn-bdr); }
+    .fi-badge.info { background: var(--info-bg); color: var(--info-txt); border: 1px solid var(--info-bdr); }
+    .fi-remove {
+      position: absolute; top: 8px; right: 10px;
+      background: none; border: none; cursor: pointer;
+      font-size: 18px; color: var(--tan); line-height: 1;
+      padding: 0; transition: color 0.12s;
+    }
+    .fi-remove:hover { color: var(--err-txt); }
+
+    /* FILE SUMMARY */
+    .file-summary {
+      font-size: 14px; color: var(--txt-muted); font-style: italic;
+      margin-top: 10px; text-align: right;
+    }
+    .file-summary strong { color: var(--green); font-style: normal; }
+
+    /* SUBMIT PROGRESS */
+    .sub-progress {
+      background: var(--info-bg);
+      border: 1px solid var(--info-bdr);
+      border-radius: 3px;
+      padding: 12px 14px;
+      margin-bottom: 12px;
+      display: none;
+    }
+    .sub-progress.on { display: block; }
+    .prog-label {
+      font-size: 14px; color: var(--info-txt);
+      margin-bottom: 8px;
+      display: flex; justify-content: space-between; align-items: baseline;
+    }
+    .prog-label-name { font-style: italic; color: var(--txt-muted); font-size: 12.5px; }
+    .prog-track {
+      height: 6px;
+      background: var(--cream-dark);
+      border-radius: 3px;
+      overflow: hidden;
+    }
+    .prog-bar {
+      height: 100%;
+      background: var(--green-mid);
+      border-radius: 3px;
+      width: 0%;
+      transition: width 0.15s ease;
+    }
+    .prog-pct { font-size: 12px; color: var(--txt-muted); text-align: right; margin-top: 4px; }
+
+    /* DIVIDER */
+    hr { border: none; border-top: 1px solid var(--tan-lt); margin: 26px 0; }
+
+    /* FIELDS */
+    .field + .field { margin-top: 13px; }
+    .lbl { display: block; font-size: 11.5px; letter-spacing: 0.13em; text-transform: uppercase; color: var(--txt-muted); margin-bottom: 6px; }
+    .lbl .opt { font-size: 11px; text-transform: none; letter-spacing: 0; font-style: italic; color: var(--tan); }
+    input[type="text"], input[type="email"], input[type="tel"], textarea {
+      display: block; width: 100%; padding: 10px 13px;
+      background: var(--cream-mid); border: 1.5px solid var(--tan-lt); border-radius: 2px;
+      font-family: 'EB Garamond', Georgia, serif; font-size: 17px;
+      color: var(--txt-body); outline: none;
+      -webkit-appearance: none; appearance: none;
+      transition: border-color 0.12s;
+    }
+    input:focus, textarea:focus { border-color: var(--green-mid); }
+    textarea { resize: vertical; min-height: 86px; line-height: 1.5; }
+    ::placeholder { color: var(--tan-lt); }
+
+    /* SIGNAL FIELD NOTE */
+    .signal-note {
+      font-size: 13px; color: var(--txt-muted); font-style: italic;
+      margin-top: 5px; padding-left: 2px;
+    }
+
+    /* TERMS */
+    .terms {
+      display: flex; align-items: flex-start; gap: 12px;
+      padding: 13px 15px;
+      background: var(--cream-mid); border: 1.5px solid var(--tan-lt); border-radius: 2px;
+      margin: 18px 0;
+    }
+    .terms input[type="checkbox"] {
+      width: 18px; height: 18px; min-width: 18px;
+      margin-top: 2px; cursor: pointer; accent-color: var(--green);
+      border: none; padding: 0; background: none;
+    }
+    .terms label { font-size: 14px; line-height: 1.55; color: var(--txt-muted); cursor: pointer; }
+
+    /* FORM ERRORS */
+    .ferrs { background: var(--err-bg); border: 1.5px solid var(--err-bdr); border-radius: 2px; padding: 12px 15px; margin-bottom: 13px; display: none; }
+    .ferrs.on { display: block; }
+    .ferrs p { font-size: 14px; color: var(--err-txt); margin-bottom: 3px; }
+    .ferrs p:last-child { margin-bottom: 0; }
+    .ferrs p::before { content: '× '; font-weight: 700; }
+
+    /* SUBMIT BUTTON */
+    .btn-sub {
+      width: 100%; padding: 16px;
+      background: var(--green); color: var(--cream); border: none; border-radius: 2px;
+      font-family: 'Playfair Display', Georgia, serif;
+      font-size: 19px; font-weight: 700; letter-spacing: 0.01em;
+      cursor: pointer; transition: background 0.15s; -webkit-appearance: none;
+    }
+    .btn-sub:hover:not(:disabled) { background: var(--green-mid); }
+    .btn-sub:disabled { opacity: 0.42; cursor: not-allowed; }
+    .sub-note { text-align: center; font-size: 13px; color: var(--tan); margin-top: 9px; }
+
+    /* SUCCESS */
+    #ok-screen { display: none; text-align: center; padding: 56px 20px; }
+    #ok-screen.on { display: block; }
+    .ok-ring {
+      width: 58px; height: 58px; border: 2px solid var(--green); border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 26px; color: var(--green); margin: 0 auto 18px;
+    }
+    #ok-screen h2 { font-family: 'Playfair Display', Georgia, serif; font-size: 30px; color: var(--green); margin-bottom: 10px; }
+    #ok-screen p { color: var(--txt-muted); font-size: 16.5px; margin-bottom: 5px; }
+    .btn-again {
+      margin-top: 22px; padding: 11px 28px;
+      background: var(--green); color: var(--cream);
+      border: none; border-radius: 2px;
+      font-family: 'Playfair Display', Georgia, serif;
+      font-size: 17px; font-weight: 700; cursor: pointer;
+    }
+
+    /* FAQ */
+    .faq-wrap { margin-top: 42px; border-top: 2px solid var(--green); padding-top: 22px; }
+    .faq-hd { font-family: 'Playfair Display', Georgia, serif; font-size: 25px; font-weight: 700; color: var(--green); margin-bottom: 14px; }
+    .faq-blurb { font-size: 15px; color: var(--txt-muted); font-style: italic; margin-bottom: 14px; }
+    .qi { border-bottom: 1px solid var(--tan-lt); }
+    .qbtn {
+      width: 100%; background: none; border: none;
+      text-align: left; padding: 14px 0;
+      display: flex; justify-content: space-between; align-items: flex-start; gap: 14px;
+      cursor: pointer; font-family: 'Playfair Display', Georgia, serif;
+      font-size: 16.5px; color: var(--green); line-height: 1.3;
+    }
+    .qbtn:hover { color: var(--green-mid); }
+    .qarr { flex-shrink: 0; font-size: 12px; color: var(--green-lt); transition: transform 0.2s; margin-top: 3px; }
+    .qi.open .qarr { transform: rotate(180deg); }
+    .qbody { max-height: 0; overflow: hidden; transition: max-height 0.28s ease; }
+    .qi.open .qbody { max-height: 700px; }
+    .qinner { padding-bottom: 15px; font-size: 15.5px; line-height: 1.68; color: var(--txt-muted); }
+    .qinner ol, .qinner ul { padding-left: 22px; margin-top: 8px; }
+    .qinner li { margin-bottom: 5px; }
+    .qinner strong { color: var(--txt-body); }
+
+    /* FOOTER */
+    footer {
+      max-width: 580px; margin: 42px auto 0; padding: 18px 22px;
+      border-top: 1px solid var(--tan-lt);
+      font-size: 13px; color: var(--tan); text-align: center;
+    }
+    footer a { color: var(--tan); }
+    .footer-signal {
+      margin-top: 8px;
+      font-size: 13.5px; color: var(--txt-muted);
+    }
+    .footer-signal strong { color: var(--green); }
+
+    @keyframes spin { to { transform: rotate(360deg); } }
+    .spin { display: inline-block; animation: spin 1.1s linear infinite; }
+  </style>
+</head>
+<body>
+
+<!-- TEST MODE BANNER -->
+<div class="test-banner" id="test-banner">
+  ⚠ TEST MODE — Geographic restrictions disabled. Set TEST_MODE: false before going live.
+</div>
+
+<!-- MASTHEAD -->
+<header class="masthead">
+  <div class="eyebrow" id="hd-eyebrow">Mojave Desert Documentation Project</div>
+  <div class="rule"></div>
+  <h1>Help Us Document<br>Illegal Dumping</h1>
+  <p class="intro">
+    We're investigating illegal dumping across the Mojave Desert and Antelope Valley in Kern, Los Angeles, Riverside, and San Bernardino Counties. Your photos and videos could be critical evidence.
+    <br>
+    <span class="signal-cta">
+      💬 Have a tip? Reach us securely on Signal: <strong>jacobmargolis.01</strong>
+    </span>
+  </p>
+</header>
+
+<main class="wrap">
+  <div id="form-screen">
+
+    <!-- STEP 1: Upload -->
+    <div class="step">
+      <div class="step-hd">
+        <span class="step-n">1</span>
+        <span class="step-title">Upload Your Photos or Videos</span>
+      </div>
+      <p class="step-sub">Select one or more files from your library · 25 MB max per file · GPS location required</p>
+
+      <div class="drop-zone" id="drop-zone">
+        <!-- No capture attribute = shows photo library, not direct camera -->
+        <input type="file" id="file-in" accept="image/*,video/*" multiple>
+        <span class="drop-icon">🗂️</span>
+        <div class="drop-cta">Choose photos or videos</div>
+        <div class="drop-hint">Select multiple at once from your library · drag and drop on desktop</div>
+      </div>
+
+      <!-- File list appears here after selection -->
+      <div class="file-list" id="file-list"></div>
+      <div class="file-summary" id="file-summary"></div>
+    </div>
+
+    <hr>
+
+    <!-- STEP 2: Contact -->
+    <div class="step">
+      <div class="step-hd">
+        <span class="step-n">2</span>
+        <span class="step-title">Your Contact Info</span>
+      </div>
+      <p class="step-sub">Optional — we may follow up if we have questions.</p>
+
+      <div class="field">
+        <label class="lbl" for="f-name">Name <span class="opt">— optional</span></label>
+        <input type="text" id="f-name" placeholder="Your name" autocomplete="name">
+      </div>
+      <div class="field">
+        <label class="lbl" for="f-email">Email <span class="opt">— optional</span></label>
+        <input type="email" id="f-email" placeholder="you@example.com" autocomplete="email">
+      </div>
+      <div class="field">
+        <label class="lbl" for="f-phone">Phone / SMS <span class="opt">— optional</span></label>
+        <input type="tel" id="f-phone" placeholder="(555) 555-5555" autocomplete="tel">
+      </div>
+      <div class="field">
+        <label class="lbl" for="f-signal">Signal username <span class="opt">— optional, for secure messaging</span></label>
+        <input type="text" id="f-signal" placeholder="your.signal.username">
+        <p class="signal-note">Prefer to reach us on Signal instead? Message us at <strong>jacobmargolis.01</strong></p>
+      </div>
+      <div class="field">
+        <label class="lbl" for="f-notes">Notes <span class="opt">— optional but helpful</span></label>
+        <textarea id="f-notes" placeholder="Describe what you saw: location, type of material, any vehicles. If you photographed a truck, note the license plate and any company logos or markings."></textarea>
+      </div>
+    </div>
+
+    <hr>
+
+    <!-- TERMS -->
+    <div class="terms">
+      <input type="checkbox" id="terms-cb" onchange="onTerms()">
+      <label for="terms-cb">
+        I confirm these photos were taken from a public road or public land, I did not trespass or break any laws, and I agree the project team reserves the right to use submitted photos and videos in their reporting.
+      </label>
+    </div>
+
+    <div class="ferrs" id="ferrs"></div>
+    <div class="sub-progress" id="sub-progress">
+      <div class="prog-label">
+        <span id="prog-status">Preparing…</span>
+        <span id="prog-count"></span>
+      </div>
+      <div class="prog-label-name" id="prog-filename"></div>
+      <div class="prog-track"><div class="prog-bar" id="prog-bar"></div></div>
+      <div class="prog-pct" id="prog-pct"></div>
+    </div>
+
+    <button class="btn-sub" id="btn-sub" disabled onclick="onSubmit()">Submit Evidence</button>
+    <p class="sub-note">Submitted over an encrypted connection. Contact info is never published.</p>
+
+  </div><!-- /form-screen -->
+
+  <!-- SUCCESS -->
+  <div id="ok-screen">
+    <div class="ok-ring">✓</div>
+    <h2>Thank you.</h2>
+    <p id="ok-count">Your evidence has been submitted.</p>
+    <p style="font-size:15px; margin-top:5px;">If you left contact info, we may be in touch.</p>
+    <p style="font-size:13px; margin-top:10px; color:var(--tan);">Files should appear in your Google Drive within a few seconds.</p>
+    <button class="btn-again" onclick="resetForm()">Submit more photos</button>
+  </div>
+
+</main>
+
+<!-- FAQ -->
+<div class="wrap">
+  <div class="faq-wrap">
+    <h2 class="faq-hd">Guidelines &amp; FAQ</h2>
+    <p class="faq-blurb">Please read before submitting.</p>
+
+    <div class="qi">
+      <button class="qbtn" onclick="toggleQ(this)">What are we looking for?<span class="qarr">▼</span></button>
+      <div class="qbody"><div class="qinner">
+        We're documenting illegal dumping across the Mojave Desert and Antelope Valley in Kern, Los Angeles, Riverside, and San Bernardino Counties. We're looking for:
+        <ol>
+          <li>Illegal dump sites — piles of trash, tires, construction debris, hazardous materials on desert land.</li>
+          <li>Trucks or vehicles that appear to be actively dumping material.</li>
+          <li>Evidence of large-scale or organized dumping operations.</li>
+        </ol>
+        <br>If you photograph a truck, please ensure <strong>license plates and company logos</strong> are clearly visible.
+      </div></div>
+    </div>
+
+    <div class="qi">
+      <button class="qbtn" onclick="toggleQ(this)">Where can I take photos from?<span class="qarr">▼</span></button>
+      <div class="qbody"><div class="qinner">
+        <strong>Every photo must be taken from a public road or public land.</strong> Do not trespass on private property. Do not follow vehicles or put yourself in danger. Maintain a safe and legal distance at all times.
+      </div></div>
+    </div>
+
+    <div class="qi">
+      <button class="qbtn" onclick="toggleQ(this)">Where does this tool work?<span class="qarr">▼</span></button>
+      <div class="qbody"><div class="qinner">
+        This tool accepts submissions from the desert communities of <strong>Kern, Los Angeles, Riverside, and San Bernardino Counties</strong> — including the Antelope Valley, the Mojave Desert, and surrounding high-desert areas. Submissions from outside this region will not be accepted.
+      </div></div>
+    </div>
+
+    <div class="qi">
+      <button class="qbtn" onclick="toggleQ(this)">How does location verification work?<span class="qarr">▼</span></button>
+      <div class="qbody"><div class="qinner">
+        The app reads GPS coordinates embedded in your photo's metadata. If those aren't present (or for videos), it asks your device for your current location. <strong>Submissions must include verifiable location data.</strong>
+        <br><br>
+        To ensure GPS is in your photos: <strong>iPhone</strong> → Settings → Privacy → Location Services → Camera → "While Using." <strong>Android</strong> → Camera app settings → enable Location tags.
+      </div></div>
+    </div>
+
+    <div class="qi">
+      <button class="qbtn" onclick="toggleQ(this)">What will you do with my photos?<span class="qarr">▼</span></button>
+      <div class="qbody"><div class="qinner">
+        <strong>We reserve the right to use submitted photos and videos in our reporting.</strong> Submissions may also be shared with regulatory agencies or law enforcement. Your contact info will never be published.
+      </div></div>
+    </div>
+
+    <div class="qi">
+      <button class="qbtn" onclick="toggleQ(this)">What about my privacy and safety?<span class="qarr">▼</span></button>
+      <div class="qbody"><div class="qinner">
+        Submitting without contact info is effectively anonymous. We strip personal metadata before any public use. If you have safety concerns, note them in the description or reach out via Signal at <strong>jacobmargolis.01</strong> before submitting. Your safety comes first.
+      </div></div>
+    </div>
+
+    <div class="qi">
+      <button class="qbtn" onclick="toggleQ(this)">How can I contact you securely?<span class="qarr">▼</span></button>
+      <div class="qbody"><div class="qinner">
+        For sensitive tips, reach us directly on <strong>Signal at jacobmargolis.01</strong> — Signal messages are end-to-end encrypted. You can also email us at <span id="faq-email">editor@yourpublication.com</span>.
+      </div></div>
+    </div>
+
+  </div>
+</div>
+
+<footer>
+  <p id="ft-pub">Mojave Desert Illegal Dumping Project</p>
+  <p style="margin-top:4px">Questions? <a id="ft-email" href="#">editor@yourpublication.com</a></p>
+  <div class="footer-signal">
+    💬 Secure tips via Signal: <strong>jacobmargolis.01</strong>
+  </div>
+</footer>
+
+<script>
+/* ================================================================
+   CONFIGURATION
+================================================================ */
+const CFG = {
+  PUBLICATION:   'Mojave Desert Illegal Dumping Project',
+  CONTACT_EMAIL: 'jmargolis@scpr.org',
+  BACKEND_URL:   'https://script.google.com/macros/s/AKfycbyouNe0ZLHDuuCiRcAYxrJZvPSoI1vzKw0c2kmcjp8MSPYuLtg7pbiyaZiOiGM_wDOmDw/exec',
+  SUBMISSION_KEY: 'Mdr7kPxQ2nLvW9bR',
+  MAX_MB: 25,
+  TEST_MODE: true,      // ← set FALSE before going live to re-enable geo restrictions
+
+  /* Geographic zones — only used when TEST_MODE is false */
+  ZONES: [
+    { label: 'Antelope Valley', minLat: 34.4, maxLat: 35.2, minLng: -118.9, maxLng: -117.5 },
+    { label: 'Mojave Desert',   minLat: 33.9, maxLat: 36.5, minLng: -118.0, maxLng: -115.0 },
+  ],
+};
+
+/* Populate labels */
+document.getElementById('hd-eyebrow').textContent = CFG.PUBLICATION;
+document.getElementById('ft-pub').textContent = CFG.PUBLICATION;
+document.getElementById('ft-email').textContent = CFG.CONTACT_EMAIL;
+document.getElementById('ft-email').href = 'mailto:' + CFG.CONTACT_EMAIL;
+document.getElementById('faq-email').textContent = CFG.CONTACT_EMAIL;
+if (CFG.TEST_MODE) document.getElementById('test-banner').classList.add('on');
+
+/* ================================================================
+   STATE
+================================================================ */
+let FILES = [];       // Array of file-state objects
+let GPS_CACHE = { status: 'idle', coords: null }; // browser GPS: idle|pending|granted|denied
+let termsOk   = false;
+let submitting = false;
+
+/* ================================================================
+   GEO
+================================================================ */
+function zoneFor(lat, lng) {
+  if (CFG.TEST_MODE) return { label: 'Test Area' }; // skip zone check in test mode
+  return CFG.ZONES.find(z =>
+    lat >= z.minLat && lat <= z.maxLat && lng >= z.minLng && lng <= z.maxLng
+  ) || null;
+}
+
+/* ================================================================
+   FILE INPUT
+================================================================ */
+const dropZone = document.getElementById('drop-zone');
+const fileIn   = document.getElementById('file-in');
+
+fileIn.addEventListener('change', e => {
+  if (e.target.files.length) addFiles(Array.from(e.target.files));
+  fileIn.value = ''; // reset so same file can be re-added
+});
+dropZone.addEventListener('dragover',  e => { e.preventDefault(); dropZone.classList.add('over'); });
+dropZone.addEventListener('dragleave', ()  => dropZone.classList.remove('over'));
+dropZone.addEventListener('drop', e => {
+  e.preventDefault(); dropZone.classList.remove('over');
+  const files = Array.from(e.dataTransfer.files).filter(f =>
+    f.type.startsWith('image/') || f.type.startsWith('video/')
+  );
+  if (files.length) addFiles(files);
+});
+
+/* ================================================================
+   ADD FILES
+================================================================ */
+function addFiles(newFiles) {
+  newFiles.forEach(file => {
+    // Deduplicate by name + size
+    if (FILES.some(f => f.file.name === file.name && f.file.size === file.size)) return;
+
+    const id = 'f' + Date.now() + Math.random().toString(36).slice(2, 6);
+    const tooBig = file.size / 1048576 > CFG.MAX_MB;
+
+    FILES.push({
+      id, file,
+      status:    tooBig ? 'too-large' : 'checking',
+      gps:       null,
+      gpsSource: null,
+      dateTaken: null,
+      previewUrl: null,
+    });
+
+    renderFiles();
+    if (!tooBig) processFile(id);
+  });
+}
+
+/* ================================================================
+   PROCESS A SINGLE FILE (EXIF → GPS)
+================================================================ */
+async function processFile(id) {
+  const fi = getFile(id);
+  if (!fi) return;
+
+  // Generate thumbnail preview
+  if (fi.file.type.startsWith('image/')) {
+    const reader = new FileReader();
+    reader.onload = e => {
+      fi.previewUrl = e.target.result;
+      renderFiles();
+    };
+    reader.readAsDataURL(fi.file);
+  }
+
+  // Try EXIF
+  if (fi.file.type.startsWith('image/')) {
+    try {
+      const exif = await exifr.parse(fi.file, { gps: true, exif: true, tiff: true });
+      if (exif) {
+        const dt = exif.DateTimeOriginal || exif.CreateDate || exif.DateTime;
+        if (dt) fi.dateTaken = new Date(dt);
+        if (exif.latitude != null && exif.longitude != null) {
+          fi.gps       = { lat: exif.latitude, lng: exif.longitude };
+          fi.gpsSource = 'exif';
+        }
+      }
+    } catch (e) { /* silent */ }
+  }
+
+  if (fi.gps) {
+    finalizeFile(id);
+    return;
+  }
+
+  // No EXIF GPS — use browser GPS
+  if (GPS_CACHE.status === 'granted') {
+    fi.gps       = GPS_CACHE.coords;
+    fi.gpsSource = 'browser';
+    finalizeFile(id);
+  } else if (GPS_CACHE.status === 'denied') {
+    fi.status = CFG.TEST_MODE ? 'no-gps-warn' : 'no-gps';
+    renderFiles(); updateBtn();
+  } else if (GPS_CACHE.status === 'idle') {
+    GPS_CACHE.status = 'pending';
+    requestBrowserGPS(id);
+  } else if (GPS_CACHE.status === 'pending') {
+    // Another file is already waiting — check back
+    const wait = setInterval(() => {
+      if (GPS_CACHE.status !== 'pending') {
+        clearInterval(wait);
+        if (GPS_CACHE.status === 'granted') {
+          fi.gps       = GPS_CACHE.coords;
+          fi.gpsSource = 'browser';
+          finalizeFile(id);
+        } else {
+          fi.status = CFG.TEST_MODE ? 'no-gps-warn' : 'no-gps';
+          renderFiles(); updateBtn();
+        }
+      }
+    }, 300);
+  }
+}
+
+/* ================================================================
+   REQUEST BROWSER GPS (once, cached)
+================================================================ */
+function requestBrowserGPS(triggeringId) {
+  if (!navigator.geolocation) {
+    GPS_CACHE.status = 'denied';
+    applyBrowserGPSResult(null);
+    return;
+  }
+  navigator.geolocation.getCurrentPosition(
+    pos => {
+      GPS_CACHE = { status: 'granted', coords: { lat: pos.coords.latitude, lng: pos.coords.longitude } };
+      applyBrowserGPSResult(GPS_CACHE.coords);
+    },
+    () => {
+      GPS_CACHE = { status: 'denied', coords: null };
+      applyBrowserGPSResult(null);
+    },
+    { enableHighAccuracy: true, timeout: 14000, maximumAge: 60000 }
+  );
+}
+
+function applyBrowserGPSResult(coords) {
+  FILES.forEach(fi => {
+    if (fi.status !== 'checking') return;
+    if (coords) {
+      fi.gps       = coords;
+      fi.gpsSource = 'browser';
+      finalizeFile(fi.id, true); // skipRender until end
+    } else {
+      fi.status = CFG.TEST_MODE ? 'no-gps-warn' : 'no-gps';
+    }
+  });
+  renderFiles();
+  updateBtn();
+}
+
+/* ================================================================
+   FINALIZE FILE STATUS
+================================================================ */
+function finalizeFile(id, skipRender) {
+  const fi = getFile(id);
+  if (!fi || !fi.gps) return;
+
+  const zone = zoneFor(fi.gps.lat, fi.gps.lng);
+  fi.status = zone ? 'ready' : 'out-of-area';
+
+  if (!skipRender) { renderFiles(); updateBtn(); }
+}
+
+/* ================================================================
+   RENDER FILE LIST
+================================================================ */
+function renderFiles() {
+  const list = document.getElementById('file-list');
+  const sumEl = document.getElementById('file-summary');
+
+  if (!FILES.length) {
+    list.innerHTML = '';
+    sumEl.textContent = '';
+    return;
+  }
+
+  list.innerHTML = FILES.map(fi => {
+    const thumbHtml = fi.previewUrl
+      ? `<img src="${fi.previewUrl}" alt="">`
+      : fi.file.type.startsWith('video/') ? '📹' : '🖼️';
+
+    const name = fi.file.name.length > 30
+      ? fi.file.name.slice(0, 27) + '…'
+      : fi.file.name;
+
+    const size  = fmtSize(fi.file.size);
+    const date  = fi.dateTaken ? fmtDate(fi.dateTaken) : '';
+    const meta  = [size, date].filter(Boolean).join(' · ');
+
+    let badgeClass, badgeText;
+    switch (fi.status) {
+      case 'checking':
+        badgeClass = 'info';
+        badgeText  = '<span class="spin">⟳</span> Checking location…'; break;
+      case 'ready':
+        badgeClass = 'ok';
+        const loc = fi.gps ? `${fi.gps.lat.toFixed(4)}°N` : '';
+        const src = fi.gpsSource === 'exif' ? 'photo GPS' : 'device GPS';
+        badgeText  = `✓ Location verified (${src})${loc ? ' · ' + loc : ''}`; break;
+      case 'no-gps-warn':
+        badgeClass = 'warn';
+        badgeText  = '⚠ No GPS — will submit without coordinates (test mode)'; break;
+      case 'no-gps':
+        badgeClass = 'err';
+        badgeText  = '✕ No GPS data — cannot submit. Enable location in Camera settings.'; break;
+      case 'out-of-area':
+        badgeClass = 'err';
+        badgeText  = `✕ Outside target area (${fi.gps ? fi.gps.lat.toFixed(4) + '°N' : ''})`; break;
+      case 'too-large':
+        badgeClass = 'err';
+        badgeText  = `✕ Too large (${fmtSize(fi.file.size)}) — max is ${CFG.MAX_MB} MB`; break;
+      default:
+        badgeClass = 'err'; badgeText = '✕ Error';
+    }
+
+    return `
+      <div class="fi" id="fi-${fi.id}">
+        <div class="fi-thumb">${thumbHtml}</div>
+        <div class="fi-body">
+          <div class="fi-name">${name}</div>
+          <div class="fi-meta">${meta}</div>
+          <div class="fi-badge ${badgeClass}">${badgeText}</div>
+        </div>
+        <button class="fi-remove" onclick="removeFile('${fi.id}')" title="Remove">×</button>
+      </div>`;
+  }).join('');
+
+  // Summary line
+  const submittable = FILES.filter(f => f.status === 'ready' || f.status === 'no-gps-warn');
+  const total       = FILES.length;
+  if (total > 0) {
+    sumEl.innerHTML = submittable.length === total
+      ? `<strong>${total}</strong> file${total !== 1 ? 's' : ''} ready to submit`
+      : `<strong>${submittable.length}</strong> of ${total} files ready to submit`;
+  }
+
+  updateBtn();
+}
+
+/* ================================================================
+   REMOVE FILE
+================================================================ */
+function removeFile(id) {
+  FILES = FILES.filter(f => f.id !== id);
+  renderFiles();
+  updateBtn();
+}
+
+/* ================================================================
+   TERMS & BUTTON
+================================================================ */
+function onTerms() {
+  termsOk = document.getElementById('terms-cb').checked;
+  updateBtn();
+}
+
+function updateBtn() {
+  const submittable = FILES.filter(f => f.status === 'ready' || f.status === 'no-gps-warn');
+  document.getElementById('btn-sub').disabled =
+    !(submittable.length > 0 && termsOk && !submitting);
+}
+
+/* ================================================================
+   SUBMIT
+================================================================ */
+async function onSubmit() {
+  if (submitting) return;
+
+  const submittable = FILES.filter(f => f.status === 'ready' || f.status === 'no-gps-warn');
+  const errors = [];
+  if (!submittable.length) errors.push('No valid files to submit.');
+  if (!termsOk)            errors.push('Please confirm the submission terms.');
+
+  const errEl = document.getElementById('ferrs');
+  if (errors.length) {
+    errEl.innerHTML = errors.map(e => `<p>${e}</p>`).join('');
+    errEl.classList.add('on'); return;
+  }
+  errEl.classList.remove('on');
+
+  submitting = true;
+  updateBtn();
+
+  const contact = {
+    name:   document.getElementById('f-name').value.trim(),
+    email:  document.getElementById('f-email').value.trim(),
+    phone:  document.getElementById('f-phone').value.trim(),
+    signal: document.getElementById('f-signal').value.trim(),
+    notes:  document.getElementById('f-notes').value.trim(),
+  };
+
+  const prog = document.getElementById('sub-progress');
+  prog.classList.add('on');
+  setProgress(0, '', '');
+
+  /* ── Demo mode ── */
+  if (!CFG.BACKEND_URL) {
+    for (let i = 0; i < submittable.length; i++) {
+      const fi = submittable[i];
+      setProgress(0, `File ${i+1} of ${submittable.length}`, fi.file.name);
+      // Simulate encode + upload
+      await delay(300);
+      for (let p = 0; p <= 100; p += 5) { setProgress(p, `File ${i+1} of ${submittable.length}`, fi.file.name); await delay(40); }
+    }
+    prog.classList.remove('on');
+    showOK(submittable.length);
+    return;
+  }
+
+  /* ── Real submission — one file at a time via XHR ──
+     WHY XHR NOT FETCH:
+     1. XHR gives real upload progress events (upload.onprogress)
+     2. Sending Content-Type: text/plain avoids CORS preflight requests
+        that Google Apps Script cannot handle, which was causing failures.
+        The body is still JSON — Apps Script reads it fine as text/plain. */
+  let successCount = 0;
+  const failedItems = [];
+
+  for (let i = 0; i < submittable.length; i++) {
+    const fi = submittable[i];
+    const countLabel = `File ${i+1} of ${submittable.length}`;
+    setProgress(0, countLabel, fi.file.name);
+
+    try {
+      const result = await sendFile(CFG.BACKEND_URL, { ...fi, contact }, pct => {
+        /* Encoding is 0–90%; final 10% is the network send */
+        setProgress(Math.round(pct * 0.9), countLabel, fi.file.name);
+      });
+
+      setProgress(100, countLabel, fi.file.name);
+      await delay(350);
+      successCount++;
+    } catch (err) {
+      failedItems.push({ name: fi.file.name, reason: err.message });
+    }
+  }
+
+  prog.classList.remove('on');
+  submitting = false;
+
+  if (successCount > 0) {
+    showOK(successCount, failedItems);
+  } else {
+    const reasons = failedItems.map(f => `${f.name}: ${f.reason}`).join('; ');
+    errEl.innerHTML =
+      `<p>Submission failed — ${reasons}.</p>` +
+      `<p>You can also email your photos directly to ${CFG.CONTACT_EMAIL}.</p>`;
+    errEl.classList.add('on');
+    updateBtn();
+  }
+}
+
+/* ================================================================
+   SUBMIT ONE FILE — fetch with no-cors
+   WHY no-cors: Google Apps Script URLs redirect through multiple
+   Google domains. Browsers block XHR/fetch from reading those
+   redirected responses unless CORS headers are set on every hop,
+   which Google doesn't do. mode:'no-cors' tells the browser:
+   "just send it, don't try to read the response." The data lands
+   in Drive/Sheets normally. We lose the server's confirmation ID
+   but gain reliable delivery.
+================================================================ */
+async function sendFile(url, payload, onEncodeProgress) {
+  /* Step 1: encode file to base64 — this is the slow part */
+  const b64 = await toBase64WithProgress(payload.file, onEncodeProgress);
+
+  const body = JSON.stringify({
+    filename:      payload.file.name,
+    mimeType:      payload.file.type,
+    fileData:      b64,
+    latitude:      payload.gps ? payload.gps.lat : null,
+    longitude:     payload.gps ? payload.gps.lng : null,
+    gpsSource:     payload.gpsSource,
+    dateTaken:     (payload.dateTaken || new Date()).toISOString(),
+    dateSubmitted: new Date().toISOString(),
+    contactName:   payload.contact.name,
+    contactEmail:  payload.contact.email,
+    contactPhone:  payload.contact.phone,
+    contactSignal: payload.contact.signal,
+    notes:         payload.contact.notes,
+    testMode:      CFG.TEST_MODE,
+    submissionKey: CFG.SUBMISSION_KEY,
+  });
+
+  /* Step 2: send — no-cors means fire-and-forget, no response read */
+  await fetch(url, {
+    method: 'POST',
+    mode:   'no-cors',
+    body:   body,
+    /* No Content-Type header: browser sends as text/plain automatically,
+       which Google Apps Script reads via e.postData.contents */
+  });
+
+  return { status: 'ok' };
+}
+
+/* ================================================================
+   PROGRESS HELPERS
+================================================================ */
+function setProgress(pct, countLabel, filename) {
+  document.getElementById('prog-bar').style.width = pct + '%';
+  document.getElementById('prog-pct').textContent  = pct > 0 ? pct + '%' : '';
+  document.getElementById('prog-count').textContent = countLabel;
+  document.getElementById('prog-filename').textContent = filename;
+  document.getElementById('prog-status').textContent =
+    pct === 100 ? '✓ Sent' : pct >= 90 ? 'Sending…' : pct > 0 ? 'Encoding…' : 'Preparing…';
+}
+
+/* ================================================================
+   SUCCESS / RESET
+================================================================ */
+function showOK(count, failed) {
+  let msg = `${count} file${count !== 1 ? 's' : ''} received — thank you.`;
+  if (failed && failed.length) msg += ` (${failed.length} file${failed.length !== 1 ? 's' : ''} could not be sent.)`;
+  document.getElementById('ok-count').textContent = msg;
+  document.getElementById('form-screen').style.display = 'none';
+  document.getElementById('ok-screen').classList.add('on');
+}
+
+function resetForm() {
+  FILES = [];
+  GPS_CACHE = { status: 'idle', coords: null };
+  termsOk = false;
+  submitting = false;
+  renderFiles();
+  ['f-name','f-email','f-phone','f-signal','f-notes'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.value = '';
+  });
+  document.getElementById('terms-cb').checked = false;
+  document.getElementById('ferrs').classList.remove('on');
+  document.getElementById('sub-progress').classList.remove('on');
+  fileIn.value = '';
+  document.getElementById('form-screen').style.display = 'block';
+  document.getElementById('ok-screen').classList.remove('on');
+  updateBtn();
+}
+
+/* ================================================================
+   FAQ
+================================================================ */
+function toggleQ(btn) {
+  const item   = btn.closest('.qi');
+  const isOpen = item.classList.contains('open');
+  document.querySelectorAll('.qi.open').forEach(el => el.classList.remove('open'));
+  if (!isOpen) item.classList.add('open');
+}
+
+/* ================================================================
+   UTILITIES
+================================================================ */
+function getFile(id) { return FILES.find(f => f.id === id); }
+
+function toBase64(file) {
+  return new Promise((res, rej) => {
+    const r = new FileReader();
+    r.onload  = () => res(r.result.split(',')[1]);
+    r.onerror = rej;
+    r.readAsDataURL(file);
+  });
+}
+
+function toBase64WithProgress(file, onProgress) {
+  return new Promise((res, rej) => {
+    const r = new FileReader();
+    r.onprogress = e => { if (e.lengthComputable) onProgress(Math.round(e.loaded / e.total * 100)); };
+    r.onload  = () => { onProgress(100); res(r.result.split(',')[1]); };
+    r.onerror = rej;
+    r.readAsDataURL(file);
+  });
+}
+
+function delay(ms) { return new Promise(r => setTimeout(r, ms)); }
+
+function fmtSize(bytes) {
+  return bytes >= 1048576 ? (bytes/1048576).toFixed(1)+' MB' : Math.round(bytes/1024)+' KB';
+}
+
+function fmtDate(d) {
+  if (!d || isNaN(d.getTime())) return '';
+  return d.toLocaleString('en-US', { month:'short', day:'numeric', year:'numeric', hour:'2-digit', minute:'2-digit' });
+}
+</script>
+</body>
+</html>

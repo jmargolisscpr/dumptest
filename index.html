@@ -78,20 +78,27 @@
     /* ── NAV BAR ── */
     .nav-bar {
       background: var(--pp-blue);
-      padding: 13px 24px;
+      padding: 12px 24px;
       display: flex; align-items: center; justify-content: space-between;
+    }
+    .nav-brand { display: flex; flex-direction: column; gap: 1px; }
+    .nav-joint {
+      font-family: 'Inter', sans-serif;
+      font-size: 9px; font-weight: 600;
+      letter-spacing: 0.16em; text-transform: uppercase;
+      color: rgba(255,255,255,.45);
     }
     .nav-wordmark {
       font-family: 'Inter', sans-serif;
-      font-size: 12.5px; font-weight: 700;
-      letter-spacing: 0.12em; text-transform: uppercase;
+      font-size: 13px; font-weight: 700;
+      letter-spacing: 0.08em; text-transform: uppercase;
       color: #ffffff;
     }
     .nav-tag {
       font-family: 'Inter', sans-serif;
       font-size: 10.5px; font-weight: 500;
       letter-spacing: 0.06em; text-transform: uppercase;
-      color: rgba(255,255,255,.45);
+      color: rgba(255,255,255,.4);
     }
 
     /* ── MASTHEAD ── */
@@ -162,15 +169,18 @@
     /* ── DROP ZONE ── */
     .drop-zone {
       position: relative;
-      border: 1.5px dashed var(--border-mid);
-      background: var(--bg-surface);
+      /* SVG dashed border — renders identically on all mobile browsers
+         unlike CSS border: dashed which clips on iOS Safari */
+      border: none;
+      background-color: var(--bg-surface);
+      background-image: url("data:image/svg+xml,%3csvg width='100%25' height='100%25' xmlns='http://www.w3.org/2000/svg'%3e%3crect width='100%25' height='100%25' fill='none' stroke='%23cccccc' stroke-width='2' stroke-dasharray='6%2c8' stroke-dashoffset='0' stroke-linecap='square'/%3e%3c/svg%3e");
       padding: 36px 20px; text-align: center; cursor: pointer;
-      transition: border-color 0.14s, background 0.14s;
+      transition: background-color 0.14s;
       -webkit-user-select: none; user-select: none;
     }
     .drop-zone:active, .drop-zone.over {
-      border-color: var(--pp-accent);
-      background: #e8f6fc;
+      background-color: #e8f6fc;
+      background-image: url("data:image/svg+xml,%3csvg width='100%25' height='100%25' xmlns='http://www.w3.org/2000/svg'%3e%3crect width='100%25' height='100%25' fill='none' stroke='%2306aee0' stroke-width='2' stroke-dasharray='6%2c8' stroke-dashoffset='0' stroke-linecap='square'/%3e%3c/svg%3e");
     }
     .drop-zone input[type="file"] {
       position: absolute; inset: 0; opacity: 0; cursor: pointer; font-size: 0;
@@ -428,7 +438,10 @@
 
 <!-- NAV BAR -->
 <div class="nav-bar">
-  <span class="nav-wordmark" id="hd-eyebrow">Mojave Desert Documentation Project</span>
+  <div class="nav-brand">
+    <span class="nav-joint">A joint project of</span>
+    <span class="nav-wordmark">ProPublica × LAist</span>
+  </div>
   <span class="nav-tag">Investigative Reporting</span>
 </div>
 
@@ -438,8 +451,8 @@
 </header>
 
 <div class="intro-deck">
-  <p>We're investigating illegal dumping across the Mojave Desert and Antelope Valley in Kern, Los Angeles, Riverside, and San Bernardino Counties. Your photos and videos could be critical evidence.</p>
-  <span class="signal-cta">💬 Have a tip? Reach us securely on Signal: <strong>jacobmargolis.01</strong></span>
+  <p>Help us gather evidence of the industrial sized illegal dumping operations occurring across the Mojave Desert. Please upload photos and videos from L.A., San Bernardino, Kern or Riverside counties of illegally dumped material and (if you can) the trucks doing the dumping.</p>
+  <span class="signal-cta">💬 Have a tip? Contact the reporter on Signal at <strong>jacobmargolis.01</strong></span>
 </div>
 
 <main class="wrap">
@@ -451,7 +464,7 @@
         <span class="step-n">1</span>
         <span class="step-title">Upload Your Photos or Videos</span>
       </div>
-      <p class="step-sub">Select one or more files from your library · 25 MB max per file · GPS location required</p>
+      <p class="step-sub">Select one or more files from your library · 50 MB max per file · GPS location required</p>
 
       <div class="drop-zone" id="drop-zone">
         <!-- No capture attribute = shows photo library, not direct camera -->
@@ -474,7 +487,7 @@
         <span class="step-n">2</span>
         <span class="step-title">Your Contact Info</span>
       </div>
-      <p class="step-sub">Optional — we may follow up if we have questions.</p>
+      <p class="step-sub">Optional, though it may help us learn more about what you document if we can reach out. Your identity will stay confidential and never be published without your permission.</p>
 
       <div class="field">
         <label class="lbl" for="f-name">Name <span class="opt">— optional</span></label>
@@ -564,39 +577,41 @@
     </div>
 
     <div class="qi">
-      <button class="qbtn" onclick="toggleQ(this)">Where does this tool work?<span class="qarr">▼</span></button>
+      <button class="qbtn" onclick="toggleQ(this)">Why we need your location<span class="qarr">▼</span></button>
       <div class="qbody"><div class="qinner">
-        This tool accepts submissions from the desert communities of <strong>Kern, Los Angeles, Riverside, and San Bernardino Counties</strong> — including the Antelope Valley, the Mojave Desert, and surrounding high-desert areas. Submissions from outside this region will not be accepted.
+        For now we're explicitly documenting illegal dumping across the <strong>Los Angeles, San Bernardino, Kern and Riverside county desert areas</strong> — including the Antelope Valley, the Mojave Desert, and surrounding high-desert areas. Submissions from outside this region will not be accepted.
       </div></div>
     </div>
 
     <div class="qi">
       <button class="qbtn" onclick="toggleQ(this)">How does location verification work?<span class="qarr">▼</span></button>
       <div class="qbody"><div class="qinner">
-        The app reads GPS coordinates embedded in your photo's metadata. If those aren't present (or for videos), it asks your device for your current location. <strong>Submissions must include verifiable location data.</strong>
+        When you upload a file we'll securely log the location data associated with each photo and video. We won't accept submissions without that information, as it's critical to verifying the veracity of the evidence.
         <br><br>
-        To ensure GPS is in your photos: <strong>iPhone</strong> → Settings → Privacy → Location Services → Camera → "While Using." <strong>Android</strong> → Camera app settings → enable Location tags.
+        To ensure GPS is in your photos: <strong>iPhone</strong> → Settings → Privacy → Location Services → Camera → "While Using."
+        <br><br>
+        <strong>Android</strong> → Camera app settings → enable Location tags.
       </div></div>
     </div>
 
     <div class="qi">
       <button class="qbtn" onclick="toggleQ(this)">What will you do with my photos?<span class="qarr">▼</span></button>
       <div class="qbody"><div class="qinner">
-        <strong>We reserve the right to use submitted photos and videos in our reporting.</strong> Submissions may also be shared with regulatory agencies or law enforcement. Your contact info will never be published.
+        We reserve the right to use submitted photos and videos in our reporting, however we won't include your name without your permission. We're less likely to include it without supplemental information. Your contact info will never be published.
       </div></div>
     </div>
 
     <div class="qi">
       <button class="qbtn" onclick="toggleQ(this)">What about my privacy and safety?<span class="qarr">▼</span></button>
       <div class="qbody"><div class="qinner">
-        Submitting without contact info is effectively anonymous. We strip personal metadata before any public use. If you have safety concerns, note them in the description or reach out via Signal at <strong>jacobmargolis.01</strong> before submitting. Your safety comes first.
+        We strip personal metadata before any public use. If you have safety concerns, note them in the description.
       </div></div>
     </div>
 
     <div class="qi">
       <button class="qbtn" onclick="toggleQ(this)">How can I contact you securely?<span class="qarr">▼</span></button>
       <div class="qbody"><div class="qinner">
-        For sensitive tips, reach us directly on <strong>Signal at jacobmargolis.01</strong> — Signal messages are end-to-end encrypted. You can also email us at <span id="faq-email">editor@yourpublication.com</span>.
+        You can reach the reporter on Signal at <strong>jacobmargolis.01</strong>. You can also email him at <a href="mailto:jmargolis@scpr.org" style="color:var(--pp-accent)">jmargolis@scpr.org</a> with the subject line "Dumping Submission."
       </div></div>
     </div>
 
@@ -604,10 +619,10 @@
 </div>
 
 <footer>
-  <p id="ft-pub">Mojave Desert Illegal Dumping Project</p>
-  <p style="margin-top:4px">Questions? <a id="ft-email" href="#">editor@yourpublication.com</a></p>
+  <p id="ft-pub">A joint project of ProPublica and LAist</p>
+  <p style="margin-top:4px">Questions? <a id="ft-email" href="mailto:jmargolis@scpr.org">jmargolis@scpr.org</a></p>
   <div class="footer-signal">
-    💬 Secure tips via Signal: <strong>jacobmargolis.01</strong>
+    💬 Contact the reporter on Signal: <strong>jacobmargolis.01</strong>
   </div>
 </footer>
 
@@ -620,7 +635,7 @@ const CFG = {
   CONTACT_EMAIL: 'jmargolis@scpr.org',
   BACKEND_URL:   'https://script.google.com/macros/s/AKfycbyouNe0ZLHDuuCiRcAYxrJZvPSoI1vzKw0c2kmcjp8MSPYuLtg7pbiyaZiOiGM_wDOmDw/exec',
   SUBMISSION_KEY: 'Mdr7kPxQ2nLvW9bR',
-  MAX_MB: 25,
+  MAX_MB: 50,
   TEST_MODE: true,      // ← set FALSE before going live to re-enable geo restrictions
 
   /* Geographic zones — only used when TEST_MODE is false */
@@ -630,12 +645,10 @@ const CFG = {
   ],
 };
 
-/* Populate labels */
-document.getElementById('hd-eyebrow').textContent = CFG.PUBLICATION;
-document.getElementById('ft-pub').textContent = CFG.PUBLICATION;
+/* Populate dynamic labels */
+document.getElementById('ft-pub').textContent  = 'A joint project of ProPublica and LAist';
 document.getElementById('ft-email').textContent = CFG.CONTACT_EMAIL;
-document.getElementById('ft-email').href = 'mailto:' + CFG.CONTACT_EMAIL;
-document.getElementById('faq-email').textContent = CFG.CONTACT_EMAIL;
+document.getElementById('ft-email').href        = 'mailto:' + CFG.CONTACT_EMAIL;
 if (CFG.TEST_MODE) document.getElementById('test-banner').classList.add('on');
 
 /* ================================================================
@@ -908,7 +921,10 @@ function renderFiles() {
         badgeText  = `✕ Outside target area (${fi.gps ? fi.gps.lat.toFixed(4) + '°N' : ''})`; break;
       case 'too-large':
         badgeClass = 'err';
-        badgeText  = `✕ Too large (${fmtSize(fi.file.size)}) — max is ${CFG.MAX_MB} MB`; break;
+        const isVideo = fi.file.type.startsWith('video/');
+        badgeText = isVideo
+          ? `✕ Video is ${fmtSize(fi.file.size)} — max is ${CFG.MAX_MB} MB. On iPhone: Photos → Share → Options → Video Quality → choose lower quality. On Android: trim or export at 1080p.`
+          : `✕ Too large (${fmtSize(fi.file.size)}) — max is ${CFG.MAX_MB} MB`; break;
       default:
         badgeClass = 'err'; badgeText = '✕ Error';
     }

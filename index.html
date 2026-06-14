@@ -472,7 +472,7 @@
 
       <div class="drop-zone" id="drop-zone">
         <!-- No capture attribute = opens photo library, not camera. Multiple allows batch select. -->
-        <input type="file" id="file-in" accept="image/jpeg,image/png,image/heic,image/heif,image/webp,image/gif,image/tiff,video/mp4,video/quicktime,video/x-m4v" multiple>
+        <input type="file" id="file-in" accept="image/*,video/*" multiple>
         <span class="drop-icon">📂</span>
         <div class="drop-cta">Choose from your library</div>
         <div class="drop-hint">Tap to select photos or videos from your photo library · drag and drop on desktop</div>
@@ -701,6 +701,20 @@ function zoneFor(lat, lng) {
 const dropZone = document.getElementById('drop-zone');
 const fileIn   = document.getElementById('file-in');
 
+/* CRITICAL: Request geolocation on the first user tap of the drop zone,
+   BEFORE the file picker opens. iOS only grants geolocation inside a
+   user-gesture context — by the time a user returns from "Take Photo"
+   in the camera app, the gesture chain is broken and the prompt fails
+   silently. Firing it here means the permission is requested while the
+   user is still on the page, and by the time they finish picking or
+   shooting a photo, the coords are cached and ready to attach. */
+dropZone.addEventListener('click', () => {
+  if (GPS_CACHE.status === 'idle') {
+    GPS_CACHE.status = 'pending';
+    requestBrowserGPS();
+  }
+}, { capture: true });
+
 fileIn.addEventListener('change', e => {
   if (e.target.files.length) addFiles(Array.from(e.target.files));
   fileIn.value = ''; // reset so same file can be re-added
@@ -927,7 +941,7 @@ function renderFiles() {
         badgeText  = '⚠ No GPS — will submit without coordinates (test mode)'; break;
       case 'no-gps':
         badgeClass = 'err';
-        badgeText  = '✕ No GPS data — cannot submit. Enable location in Camera settings.'; break;
+        badgeText  = '✕ No location — allow location access in your browser, or use a photo that has GPS in its EXIF data.'; break;
       case 'out-of-area':
         badgeClass = 'err';
         badgeText  = `✕ Outside target area (${fi.gps ? fi.gps.lat.toFixed(4) + '°N' : ''})`; break;

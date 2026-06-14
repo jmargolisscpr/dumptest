@@ -468,14 +468,14 @@
         <span class="step-n">1</span>
         <span class="step-title">Upload Your Photos or Videos</span>
       </div>
-      <p class="step-sub">Select one or more files from your library · 50 MB max per file · GPS location required</p>
+      <p class="step-sub">Select from your photo library — do not use "Take Photo" · 50 MB max per file · GPS location required</p>
 
       <div class="drop-zone" id="drop-zone">
-        <!-- No capture attribute = shows photo library, not direct camera -->
+        <!-- No capture attribute = opens photo library, not camera. Multiple allows batch select. -->
         <input type="file" id="file-in" accept="image/*,video/*" multiple>
-        <span class="drop-icon">🗂️</span>
-        <div class="drop-cta">Choose photos or videos</div>
-        <div class="drop-hint">Select multiple at once from your library · drag and drop on desktop</div>
+        <span class="drop-icon">📂</span>
+        <div class="drop-cta">Choose from your library</div>
+        <div class="drop-hint">Tap to select photos or videos from your photo library · drag and drop on desktop</div>
       </div>
 
       <!-- File list appears here after selection -->
@@ -538,7 +538,7 @@
     </div>
 
     <button class="btn-sub" id="btn-sub" disabled onclick="onSubmit()">Submit Evidence</button>
-    <p class="sub-note">Submitted over an encrypted connection. Contact info is never published.</p>
+    
 
   </div><!-- /form-screen -->
 
@@ -757,6 +757,14 @@ async function processFile(id) {
     reader.onload = e => {
       fi.previewUrl = e.target.result;
       renderFiles();
+    };
+    reader.onerror = () => {
+      /* HEIC / some iPhone JPEGs fail readAsDataURL for preview —
+         fall back to a blob URL which browsers can display natively */
+      try {
+        fi.previewUrl = URL.createObjectURL(fi.file);
+        renderFiles();
+      } catch (e) { /* no preview — not a blocking error */ }
     };
     reader.readAsDataURL(fi.file);
   }
@@ -1207,17 +1215,54 @@ function toBase64(file) {
   return new Promise((res, rej) => {
     const r = new FileReader();
     r.onload  = () => res(r.result.split(',')[1]);
-    r.onerror = rej;
+    r.onerror = () => {
+      /* Fallback: readAsArrayBuffer is more permissive on iOS HEIC/JPEG */
+      const r2 = new FileReader();
+      r2.onload  = () => res(arrayBufferToBase64(r2.result));
+      r2.onerror = rej;
+      r2.readAsArrayBuffer(file);
+    };
     r.readAsDataURL(file);
   });
 }
 
+/* Encode an ArrayBuffer to base64 in chunks to avoid call-stack overflow
+   on large files (iOS Safari has a smaller stack than Chrome/Android) */
+function arrayBufferToBase64(buffer) {
+  const bytes = new Uint8Array(buffer);
+  let binary = '';
+  const chunkSize = 8192;
+  for (let i = 0; i < bytes.length; i += chunkSize) {
+    binary += String.fromCharCode.apply(null, bytes.subarray(i, i + chunkSize));
+  }
+  return btoa(binary);
+}
+
 function toBase64WithProgress(file, onProgress) {
   return new Promise((res, rej) => {
+    /* Primary path: readAsDataURL — fast, gives progress events */
     const r = new FileReader();
     r.onprogress = e => { if (e.lengthComputable) onProgress(Math.round(e.loaded / e.total * 100)); };
     r.onload  = () => { onProgress(100); res(r.result.split(',')[1]); };
-    r.onerror = rej;
+    r.onerror = () => {
+      /* Fallback path: readAsArrayBuffer — works on HEIC and edge-case JPEG files
+         that iOS reports as "Load failed" via readAsDataURL.
+         No per-byte progress events available, so we pulse the bar instead. */
+      console.warn('readAsDataURL failed for', file.name, '— retrying with ArrayBuffer');
+      onProgress(5); // show immediate activity
+      const r2 = new FileReader();
+      r2.onload = () => {
+        try {
+          const b64 = arrayBufferToBase64(r2.result);
+          onProgress(100);
+          res(b64);
+        } catch (encErr) {
+          rej(new Error('Encoding failed: ' + encErr.message));
+        }
+      };
+      r2.onerror = () => rej(new Error('Load failed — try re-selecting the file, or export it from Photos first.'));
+      r2.readAsArrayBuffer(file);
+    };
     r.readAsDataURL(file);
   });
 }

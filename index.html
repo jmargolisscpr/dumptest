@@ -20,145 +20,202 @@
   <title>Document Illegal Dumping — Mojave Desert</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;0,900;1,400&family=EB+Garamond:ital,wght@0,400;0,500;0,600;1,400&display=swap" rel="stylesheet">
+  <!-- Source Serif 4 = closest available match to ProPublica's Tiempos (licensed) -->
+  <!-- Inter = closest available match to ProPublica's Graphik (licensed) -->
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@900&family=Source+Serif+4:ital,opsz,wght@0,8..60,400;0,8..60,600;1,8..60,400&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
   <script src="https://cdn.jsdelivr.net/npm/exifr@7.1.3/dist/full.umd.js"></script>
   <style>
+    /* ══════════════════════════════════════════════════════════
+       PROPUBLICA — current live design (2026 Gretel rebrand)
+       White bg · near-black text · PP blue nav · accent blue
+       Images 1-3 reference: white article pages, bold serif
+       headlines, light gray form surfaces, blue accent on CTAs
+    ══════════════════════════════════════════════════════════ */
     :root {
-      --cream:      #ede9de;
-      --cream-mid:  #e4e0d4;
-      --cream-dark: #d8d3c5;
-      --green:      #1b4020;
-      --green-mid:  #2c6432;
-      --green-lt:   #487f4e;
-      --tan:        #a4936a;
-      --tan-lt:     #c6b98e;
-      --txt:        #182e1a;
-      --txt-body:   #283028;
-      --txt-muted:  #64754a;
-      --err-bg:     #f5dada; --err-txt: #7a1818; --err-bdr: #d09090;
-      --ok-bg:      #d8ebd8; --ok-txt:  #183818; --ok-bdr:  #8ac08a;
-      --warn-bg:    #f0e8d0; --warn-txt: #604810; --warn-bdr: #d0b870;
-      --info-bg:    #e8e4d8; --info-txt: #3a4a2a; --info-bdr: #b8ad90;
+      --white:      #ffffff;
+      --bg:         #ffffff;   /* page background */
+      --bg-surface: #f7f7f7;   /* form sections, cards */
+      --bg-input:   #f2f2f2;   /* input fields */
+      --pp-blue:    #304154;   /* nav bar */
+      --pp-accent:  #06aee0;   /* accent blue — interactive, CTAs */
+      --pp-red:     #da352b;   /* red — used for links & alerts */
+      --black:      #111111;   /* headlines */
+      --text:       #1a1a1a;   /* primary body text */
+      --text-mid:   #555555;   /* deck text, secondary */
+      --text-dim:   #999999;   /* labels, placeholders, hints */
+      --border:     #e2e2e2;   /* dividers, card edges */
+      --border-mid: #cccccc;   /* input borders */
+
+      --ok-bg:   #eaf7ec; --ok-txt:   #1a6b2a; --ok-bdr:   #a8d9b0;
+      --err-bg:  #fdf0ee; --err-txt:  #9b1a10; --err-bdr:  #e8a89a;
+      --warn-bg: #fef8e7; --warn-txt: #7a5500; --warn-bdr: #e8cc88;
+      --info-bg: #e8f6fc; --info-txt: #005a7a; --info-bdr: #8dd0ea;
     }
+
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
     html { scroll-behavior: smooth; -webkit-tap-highlight-color: transparent; }
     body {
-      background: var(--cream);
-      color: var(--txt-body);
-      font-family: 'EB Garamond', Georgia, serif;
-      font-size: 18px;
-      line-height: 1.62;
-      padding-bottom: 64px;
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'Inter', system-ui, sans-serif;
+      font-size: 16px;
+      line-height: 1.6;
+      padding-bottom: 80px;
     }
-    .wrap { max-width: 580px; margin: 0 auto; padding: 0 22px; }
+    .wrap { max-width: 620px; margin: 0 auto; padding: 0 24px; }
 
-    /* TEST MODE BANNER */
+    /* ── TEST BANNER ── */
     .test-banner {
-      background: #7a4a00;
-      color: #ffe8b0;
-      text-align: center;
-      font-size: 13px;
-      padding: 8px 16px;
-      letter-spacing: 0.05em;
-      display: none;
+      background: #fff3cd; color: #7a5500;
+      font-family: 'Inter', sans-serif;
+      font-size: 11px; font-weight: 700;
+      letter-spacing: 0.1em; text-transform: uppercase;
+      text-align: center; padding: 7px 16px; display: none;
+      border-bottom: 1px solid #e8cc88;
     }
     .test-banner.on { display: block; }
 
-    /* MASTHEAD */
-    .masthead { padding: 28px 22px 0; max-width: 580px; margin: 0 auto; }
-    .eyebrow {
-      font-size: 11.5px; letter-spacing: 0.2em;
-      text-transform: uppercase; color: var(--green-lt);
-      font-family: 'EB Garamond', Georgia, serif;
+    /* ── NAV BAR ── */
+    .nav-bar {
+      background: var(--pp-blue);
+      padding: 13px 24px;
+      display: flex; align-items: center; justify-content: space-between;
     }
-    .rule { height: 2px; background: var(--green); margin: 10px 0 18px; }
+    .nav-wordmark {
+      font-family: 'Inter', sans-serif;
+      font-size: 12.5px; font-weight: 700;
+      letter-spacing: 0.12em; text-transform: uppercase;
+      color: #ffffff;
+    }
+    .nav-tag {
+      font-family: 'Inter', sans-serif;
+      font-size: 10.5px; font-weight: 500;
+      letter-spacing: 0.06em; text-transform: uppercase;
+      color: rgba(255,255,255,.45);
+    }
+
+    /* ── MASTHEAD ── */
+    .masthead {
+      background: var(--white);
+      border-top: 3px solid var(--pp-accent);
+      padding: 36px 24px 28px;
+      max-width: 620px;
+      margin: 0 auto;
+      border-bottom: 1px solid var(--border);
+    }
+    .eyebrow {
+      font-family: 'Inter', sans-serif;
+      font-size: 10.5px; font-weight: 700;
+      letter-spacing: 0.2em; text-transform: uppercase;
+      color: var(--pp-accent); margin-bottom: 14px;
+    }
     h1 {
       font-family: 'Playfair Display', Georgia, serif;
-      font-size: clamp(32px, 9.5vw, 50px);
-      font-weight: 900; color: var(--green);
-      line-height: 1.08; letter-spacing: -0.01em;
-      margin-bottom: 14px;
-    }
-    .intro {
-      font-size: 16.5px; color: var(--txt-muted);
-      line-height: 1.68;
-      border-bottom: 1px solid var(--tan-lt);
-      padding-bottom: 22px; margin-bottom: 4px;
+      font-size: clamp(32px, 8.5vw, 50px);
+      font-weight: 900;
+      color: var(--black);
+      line-height: 1.06; letter-spacing: -0.02em;
     }
 
-    /* SIGNAL CTA in intro area */
+    /* ── INTRO DECK ── */
+    .intro-deck {
+      max-width: 620px; margin: 0 auto;
+      padding: 20px 24px 22px;
+      border-bottom: 1px solid var(--border);
+      background: var(--white);
+    }
+    .intro-deck p {
+      font-family: 'Source Serif 4', Georgia, serif;
+      font-size: 17px; line-height: 1.75;
+      color: var(--text-mid);
+      margin-bottom: 12px;
+    }
     .signal-cta {
-      display: inline-flex; align-items: center; gap: 7px;
-      font-size: 14px; color: var(--green-mid);
-      margin-top: 10px;
-      font-style: normal;
+      display: inline-flex; align-items: center; gap: 6px;
+      font-family: 'Inter', sans-serif;
+      font-size: 12.5px; font-weight: 500;
+      color: var(--pp-accent);
     }
-    .signal-cta strong { color: var(--green); }
+    .signal-cta strong { color: var(--text); font-weight: 700; }
 
-    /* STEPS */
-    .step { margin-top: 26px; }
-    .step-hd { display: flex; align-items: baseline; gap: 13px; margin-bottom: 12px; }
+    /* ── STEPS ── */
+    .step { margin-top: 30px; }
+    .step-hd { display: flex; align-items: baseline; gap: 13px; margin-bottom: 10px; }
     .step-n {
       display: inline-flex; align-items: center; justify-content: center;
-      width: 28px; height: 28px; min-width: 28px;
-      border: 2px solid var(--green); border-radius: 50%;
-      font-family: 'Playfair Display', Georgia, serif;
-      font-size: 14px; font-weight: 700; color: var(--green);
+      width: 24px; height: 24px; min-width: 24px;
+      border: 1.5px solid var(--pp-accent); border-radius: 50%;
+      font-family: 'Inter', sans-serif;
+      font-size: 11px; font-weight: 700; color: var(--pp-accent);
       flex-shrink: 0; position: relative; top: -1px;
     }
     .step-title {
       font-family: 'Playfair Display', Georgia, serif;
-      font-size: 21px; font-weight: 700; color: var(--green); line-height: 1.2;
+      font-size: 20px; font-weight: 900; color: var(--black); line-height: 1.2;
     }
-    .step-sub { font-size: 14px; color: var(--txt-muted); font-style: italic; margin: -6px 0 13px 41px; }
+    .step-sub {
+      font-family: 'Inter', sans-serif;
+      font-size: 11.5px; color: var(--text-dim); margin: -3px 0 12px 37px;
+      letter-spacing: 0.02em;
+    }
 
-    /* DROP ZONE */
+    /* ── DROP ZONE ── */
     .drop-zone {
       position: relative;
-      border: 2px dashed var(--tan); border-radius: 3px;
-      background: var(--cream-mid);
-      padding: 32px 20px; text-align: center; cursor: pointer;
+      border: 1.5px dashed var(--border-mid);
+      background: var(--bg-surface);
+      padding: 36px 20px; text-align: center; cursor: pointer;
       transition: border-color 0.14s, background 0.14s;
       -webkit-user-select: none; user-select: none;
     }
-    .drop-zone:active, .drop-zone.over { border-color: var(--green-mid); background: var(--cream-dark); }
+    .drop-zone:active, .drop-zone.over {
+      border-color: var(--pp-accent);
+      background: #e8f6fc;
+    }
     .drop-zone input[type="file"] {
       position: absolute; inset: 0; opacity: 0; cursor: pointer; font-size: 0;
     }
-    .drop-icon { font-size: 28px; display: block; margin-bottom: 8px; pointer-events: none; }
+    .drop-icon { font-size: 26px; display: block; margin-bottom: 10px; pointer-events: none; }
     .drop-cta {
       font-family: 'Playfair Display', Georgia, serif;
-      font-size: 18px; font-weight: 700; color: var(--green); pointer-events: none;
+      font-size: 18px; font-weight: 900; color: var(--black); pointer-events: none;
     }
-    .drop-hint { font-size: 13px; color: var(--txt-muted); margin-top: 5px; pointer-events: none; }
+    .drop-hint {
+      font-family: 'Inter', sans-serif;
+      font-size: 12px; color: var(--text-dim); margin-top: 5px; pointer-events: none;
+    }
 
-    /* FILE LIST */
-    .file-list { margin-top: 14px; display: flex; flex-direction: column; gap: 10px; }
+    /* ── FILE LIST ── */
+    .file-list { margin-top: 10px; display: flex; flex-direction: column; gap: 8px; }
     .fi {
       display: flex; align-items: flex-start; gap: 12px;
-      background: var(--cream-mid);
-      border: 1px solid var(--tan-lt); border-radius: 3px;
-      padding: 10px 12px;
-      position: relative;
+      background: var(--bg-surface);
+      border: 1px solid var(--border);
+      border-left: 3px solid var(--border);
+      padding: 10px 12px; position: relative;
     }
     .fi-thumb {
-      width: 56px; height: 56px; min-width: 56px;
-      border-radius: 2px; overflow: hidden;
-      background: var(--cream-dark);
+      width: 52px; height: 52px; min-width: 52px;
+      overflow: hidden; background: var(--bg-input);
       display: flex; align-items: center; justify-content: center;
-      font-size: 22px; flex-shrink: 0;
+      font-size: 20px; flex-shrink: 0;
     }
     .fi-thumb img { width: 100%; height: 100%; object-fit: cover; display: block; }
     .fi-body { flex: 1; min-width: 0; }
     .fi-name {
-      font-size: 14px; font-weight: 600; color: var(--txt);
-      white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
-      margin-bottom: 2px;
+      font-family: 'Inter', sans-serif;
+      font-size: 13px; font-weight: 600; color: var(--black);
+      white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin-bottom: 2px;
     }
-    .fi-meta { font-size: 12px; color: var(--txt-muted); margin-bottom: 5px; }
+    .fi-meta {
+      font-family: 'Inter', sans-serif;
+      font-size: 11px; color: var(--text-dim); margin-bottom: 5px;
+    }
     .fi-badge {
       display: inline-flex; align-items: center; gap: 5px;
-      font-size: 12.5px; padding: 3px 8px; border-radius: 2px;
+      font-family: 'Inter', sans-serif;
+      font-size: 11px; font-weight: 500; padding: 2px 8px;
+      border-radius: 2px;
     }
     .fi-badge.ok   { background: var(--ok-bg);   color: var(--ok-txt);   border: 1px solid var(--ok-bdr); }
     .fi-badge.err  { background: var(--err-bg);  color: var(--err-txt);  border: 1px solid var(--err-bdr); }
@@ -167,163 +224,195 @@
     .fi-remove {
       position: absolute; top: 8px; right: 10px;
       background: none; border: none; cursor: pointer;
-      font-size: 18px; color: var(--tan); line-height: 1;
-      padding: 0; transition: color 0.12s;
+      font-size: 15px; color: var(--text-dim); padding: 0; transition: color 0.12s;
     }
-    .fi-remove:hover { color: var(--err-txt); }
+    .fi-remove:hover { color: var(--pp-red); }
 
-    /* FILE SUMMARY */
+    /* ── FILE SUMMARY ── */
     .file-summary {
-      font-size: 14px; color: var(--txt-muted); font-style: italic;
-      margin-top: 10px; text-align: right;
+      font-family: 'Inter', sans-serif;
+      font-size: 12px; color: var(--text-dim);
+      text-align: right; margin-top: 8px;
     }
-    .file-summary strong { color: var(--green); font-style: normal; }
+    .file-summary strong { color: var(--pp-accent); font-style: normal; }
 
-    /* SUBMIT PROGRESS */
+    /* ── PROGRESS BAR ── */
     .sub-progress {
-      background: var(--info-bg);
-      border: 1px solid var(--info-bdr);
-      border-radius: 3px;
-      padding: 12px 14px;
-      margin-bottom: 12px;
-      display: none;
+      background: var(--bg-surface);
+      border: 1px solid var(--border);
+      border-top: 2px solid var(--pp-accent);
+      padding: 12px 14px; margin-bottom: 12px; display: none;
     }
     .sub-progress.on { display: block; }
     .prog-label {
-      font-size: 14px; color: var(--info-txt);
+      font-family: 'Inter', sans-serif;
+      font-size: 11px; font-weight: 700; color: var(--text-mid);
       margin-bottom: 8px;
-      display: flex; justify-content: space-between; align-items: baseline;
+      display: flex; justify-content: space-between;
+      letter-spacing: 0.06em; text-transform: uppercase;
     }
-    .prog-label-name { font-style: italic; color: var(--txt-muted); font-size: 12.5px; }
-    .prog-track {
-      height: 6px;
-      background: var(--cream-dark);
-      border-radius: 3px;
-      overflow: hidden;
+    .prog-label-name {
+      font-family: 'Inter', sans-serif;
+      font-size: 11px; color: var(--text-dim); margin-bottom: 6px;
     }
-    .prog-bar {
-      height: 100%;
-      background: var(--green-mid);
-      border-radius: 3px;
-      width: 0%;
-      transition: width 0.15s ease;
+    .prog-track { height: 2px; background: var(--border); overflow: hidden; }
+    .prog-bar { height: 100%; background: var(--pp-accent); width: 0%; transition: width 0.15s ease; }
+    .prog-pct {
+      font-family: 'Inter', sans-serif;
+      font-size: 11px; color: var(--text-dim); text-align: right; margin-top: 4px;
     }
-    .prog-pct { font-size: 12px; color: var(--txt-muted); text-align: right; margin-top: 4px; }
 
-    /* DIVIDER */
-    hr { border: none; border-top: 1px solid var(--tan-lt); margin: 26px 0; }
+    /* ── DIVIDER ── */
+    hr { border: none; border-top: 1px solid var(--border); margin: 28px 0; }
 
-    /* FIELDS */
-    .field + .field { margin-top: 13px; }
-    .lbl { display: block; font-size: 11.5px; letter-spacing: 0.13em; text-transform: uppercase; color: var(--txt-muted); margin-bottom: 6px; }
-    .lbl .opt { font-size: 11px; text-transform: none; letter-spacing: 0; font-style: italic; color: var(--tan); }
+    /* ── FIELDS ── */
+    .field + .field { margin-top: 14px; }
+    .lbl {
+      display: block;
+      font-family: 'Inter', sans-serif;
+      font-size: 10.5px; font-weight: 700;
+      letter-spacing: 0.16em; text-transform: uppercase;
+      color: var(--text-mid); margin-bottom: 6px;
+    }
+    .lbl .opt { font-size: 10px; text-transform: none; letter-spacing: 0; font-weight: 400; color: var(--text-dim); }
     input[type="text"], input[type="email"], input[type="tel"], textarea {
-      display: block; width: 100%; padding: 10px 13px;
-      background: var(--cream-mid); border: 1.5px solid var(--tan-lt); border-radius: 2px;
-      font-family: 'EB Garamond', Georgia, serif; font-size: 17px;
-      color: var(--txt-body); outline: none;
+      display: block; width: 100%;
+      padding: 11px 13px;
+      background: var(--bg-input);
+      border: 1px solid var(--border-mid);
+      font-family: 'Inter', sans-serif; font-size: 15px;
+      color: var(--text); outline: none;
       -webkit-appearance: none; appearance: none;
       transition: border-color 0.12s;
     }
-    input:focus, textarea:focus { border-color: var(--green-mid); }
-    textarea { resize: vertical; min-height: 86px; line-height: 1.5; }
-    ::placeholder { color: var(--tan-lt); }
-
-    /* SIGNAL FIELD NOTE */
+    input:focus, textarea:focus { border-color: var(--pp-accent); }
+    textarea { resize: vertical; min-height: 88px; line-height: 1.55; }
+    ::placeholder { color: var(--text-dim); }
     .signal-note {
-      font-size: 13px; color: var(--txt-muted); font-style: italic;
-      margin-top: 5px; padding-left: 2px;
+      font-family: 'Inter', sans-serif;
+      font-size: 12px; color: var(--text-dim); margin-top: 5px;
     }
+    .signal-note strong { color: var(--pp-accent); }
 
-    /* TERMS */
+    /* ── TERMS ── */
     .terms {
       display: flex; align-items: flex-start; gap: 12px;
-      padding: 13px 15px;
-      background: var(--cream-mid); border: 1.5px solid var(--tan-lt); border-radius: 2px;
-      margin: 18px 0;
+      padding: 14px 15px;
+      background: var(--bg-surface);
+      border: 1px solid var(--border);
+      margin: 20px 0;
     }
     .terms input[type="checkbox"] {
-      width: 18px; height: 18px; min-width: 18px;
-      margin-top: 2px; cursor: pointer; accent-color: var(--green);
-      border: none; padding: 0; background: none;
+      width: 16px; height: 16px; min-width: 16px;
+      margin-top: 3px; cursor: pointer; accent-color: var(--pp-accent);
+      border: none; padding: 0;
     }
-    .terms label { font-size: 14px; line-height: 1.55; color: var(--txt-muted); cursor: pointer; }
+    .terms label {
+      font-family: 'Inter', sans-serif;
+      font-size: 13px; line-height: 1.6; color: var(--text-mid); cursor: pointer;
+    }
 
-    /* FORM ERRORS */
-    .ferrs { background: var(--err-bg); border: 1.5px solid var(--err-bdr); border-radius: 2px; padding: 12px 15px; margin-bottom: 13px; display: none; }
+    /* ── FORM ERRORS ── */
+    .ferrs {
+      background: var(--err-bg);
+      border: 1px solid var(--err-bdr);
+      border-left: 3px solid var(--err-txt);
+      padding: 12px 15px; margin-bottom: 12px; display: none;
+    }
     .ferrs.on { display: block; }
-    .ferrs p { font-size: 14px; color: var(--err-txt); margin-bottom: 3px; }
+    .ferrs p { font-family: 'Inter', sans-serif; font-size: 13px; color: var(--err-txt); margin-bottom: 3px; }
     .ferrs p:last-child { margin-bottom: 0; }
     .ferrs p::before { content: '× '; font-weight: 700; }
 
-    /* SUBMIT BUTTON */
+    /* ── SUBMIT BUTTON ── */
     .btn-sub {
-      width: 100%; padding: 16px;
-      background: var(--green); color: var(--cream); border: none; border-radius: 2px;
-      font-family: 'Playfair Display', Georgia, serif;
-      font-size: 19px; font-weight: 700; letter-spacing: 0.01em;
+      width: 100%; padding: 15px;
+      background: var(--pp-accent); color: #ffffff;
+      border: none; font-family: 'Inter', sans-serif;
+      font-size: 13px; font-weight: 700;
+      letter-spacing: 0.1em; text-transform: uppercase;
       cursor: pointer; transition: background 0.15s; -webkit-appearance: none;
     }
-    .btn-sub:hover:not(:disabled) { background: var(--green-mid); }
-    .btn-sub:disabled { opacity: 0.42; cursor: not-allowed; }
-    .sub-note { text-align: center; font-size: 13px; color: var(--tan); margin-top: 9px; }
+    .btn-sub:hover:not(:disabled) { background: #0599c8; }
+    .btn-sub:disabled { opacity: 0.35; cursor: not-allowed; }
+    .sub-note {
+      text-align: center; font-family: 'Inter', sans-serif;
+      font-size: 11px; color: var(--text-dim); margin-top: 10px;
+    }
 
-    /* SUCCESS */
-    #ok-screen { display: none; text-align: center; padding: 56px 20px; }
+    /* ── SUCCESS ── */
+    #ok-screen { display: none; text-align: center; padding: 64px 20px; }
     #ok-screen.on { display: block; }
     .ok-ring {
-      width: 58px; height: 58px; border: 2px solid var(--green); border-radius: 50%;
+      width: 52px; height: 52px; border: 1.5px solid var(--pp-accent); border-radius: 50%;
       display: flex; align-items: center; justify-content: center;
-      font-size: 26px; color: var(--green); margin: 0 auto 18px;
+      font-size: 22px; color: var(--pp-accent); margin: 0 auto 20px;
     }
-    #ok-screen h2 { font-family: 'Playfair Display', Georgia, serif; font-size: 30px; color: var(--green); margin-bottom: 10px; }
-    #ok-screen p { color: var(--txt-muted); font-size: 16.5px; margin-bottom: 5px; }
-    .btn-again {
-      margin-top: 22px; padding: 11px 28px;
-      background: var(--green); color: var(--cream);
-      border: none; border-radius: 2px;
+    #ok-screen h2 {
       font-family: 'Playfair Display', Georgia, serif;
-      font-size: 17px; font-weight: 700; cursor: pointer;
+      font-size: 28px; font-weight: 900; color: var(--black); margin-bottom: 10px;
+    }
+    #ok-screen p { color: var(--text-mid); font-size: 15.5px; margin-bottom: 5px; }
+    .btn-again {
+      margin-top: 24px; padding: 12px 28px;
+      background: var(--pp-accent); color: #ffffff; border: none;
+      font-family: 'Inter', sans-serif; font-size: 12px; font-weight: 700;
+      letter-spacing: 0.1em; text-transform: uppercase; cursor: pointer;
     }
 
-    /* FAQ */
-    .faq-wrap { margin-top: 42px; border-top: 2px solid var(--green); padding-top: 22px; }
-    .faq-hd { font-family: 'Playfair Display', Georgia, serif; font-size: 25px; font-weight: 700; color: var(--green); margin-bottom: 14px; }
-    .faq-blurb { font-size: 15px; color: var(--txt-muted); font-style: italic; margin-bottom: 14px; }
-    .qi { border-bottom: 1px solid var(--tan-lt); }
+    /* ── FAQ ── */
+    .faq-wrap {
+      margin-top: 48px; border-top: 3px solid var(--pp-accent); padding-top: 24px;
+    }
+    .faq-hd {
+      font-family: 'Playfair Display', Georgia, serif;
+      font-size: 26px; font-weight: 900; color: var(--black); margin-bottom: 6px;
+    }
+    .faq-blurb {
+      font-family: 'Inter', sans-serif;
+      font-size: 11px; color: var(--text-dim);
+      letter-spacing: 0.08em; text-transform: uppercase; margin-bottom: 18px;
+    }
+    .qi { border-bottom: 1px solid var(--border); }
     .qbtn {
       width: 100%; background: none; border: none;
-      text-align: left; padding: 14px 0;
+      text-align: left; padding: 15px 0;
       display: flex; justify-content: space-between; align-items: flex-start; gap: 14px;
-      cursor: pointer; font-family: 'Playfair Display', Georgia, serif;
-      font-size: 16.5px; color: var(--green); line-height: 1.3;
+      cursor: pointer;
+      font-family: 'Playfair Display', Georgia, serif;
+      font-size: 16px; font-weight: 900; color: var(--black); line-height: 1.3;
     }
-    .qbtn:hover { color: var(--green-mid); }
-    .qarr { flex-shrink: 0; font-size: 12px; color: var(--green-lt); transition: transform 0.2s; margin-top: 3px; }
+    .qbtn:hover { color: var(--pp-accent); }
+    .qarr { flex-shrink: 0; font-size: 10px; color: var(--text-dim); transition: transform 0.2s; margin-top: 4px; }
     .qi.open .qarr { transform: rotate(180deg); }
     .qbody { max-height: 0; overflow: hidden; transition: max-height 0.28s ease; }
     .qi.open .qbody { max-height: 700px; }
-    .qinner { padding-bottom: 15px; font-size: 15.5px; line-height: 1.68; color: var(--txt-muted); }
+    .qinner {
+      padding-bottom: 16px;
+      font-family: 'Source Serif 4', Georgia, serif;
+      font-size: 15.5px; line-height: 1.72; color: var(--text-mid);
+    }
     .qinner ol, .qinner ul { padding-left: 22px; margin-top: 8px; }
-    .qinner li { margin-bottom: 5px; }
-    .qinner strong { color: var(--txt-body); }
+    .qinner li { margin-bottom: 6px; }
+    .qinner strong { color: var(--text); }
 
-    /* FOOTER */
+    /* ── FOOTER ── */
     footer {
-      max-width: 580px; margin: 42px auto 0; padding: 18px 22px;
-      border-top: 1px solid var(--tan-lt);
-      font-size: 13px; color: var(--tan); text-align: center;
+      max-width: 620px; margin: 48px auto 0;
+      padding: 20px 24px;
+      background: var(--pp-blue);
+      font-family: 'Inter', sans-serif;
+      font-size: 12px; color: rgba(255,255,255,.5); text-align: center;
     }
-    footer a { color: var(--tan); }
-    .footer-signal {
-      margin-top: 8px;
-      font-size: 13.5px; color: var(--txt-muted);
-    }
-    .footer-signal strong { color: var(--green); }
+    footer a { color: rgba(255,255,255,.7); text-decoration: none; }
+    footer a:hover { color: #ffffff; }
+    .footer-signal { margin-top: 7px; font-size: 12px; color: rgba(255,255,255,.6); }
+    .footer-signal strong { color: var(--pp-accent); }
 
     @keyframes spin { to { transform: rotate(360deg); } }
     .spin { display: inline-block; animation: spin 1.1s linear infinite; }
   </style>
+
 </head>
 <body>
 
@@ -332,19 +421,21 @@
   ⚠ TEST MODE — Geographic restrictions disabled. Set TEST_MODE: false before going live.
 </div>
 
+<!-- NAV BAR -->
+<div class="nav-bar">
+  <span class="nav-wordmark" id="hd-eyebrow">Mojave Desert Documentation Project</span>
+  <span class="nav-tag">Investigative Reporting</span>
+</div>
+
 <!-- MASTHEAD -->
 <header class="masthead">
-  <div class="eyebrow" id="hd-eyebrow">Mojave Desert Documentation Project</div>
-  <div class="rule"></div>
   <h1>Help Us Document<br>Illegal Dumping</h1>
-  <p class="intro">
-    We're investigating illegal dumping across the Mojave Desert and Antelope Valley in Kern, Los Angeles, Riverside, and San Bernardino Counties. Your photos and videos could be critical evidence.
-    <br>
-    <span class="signal-cta">
-      💬 Have a tip? Reach us securely on Signal: <strong>jacobmargolis.01</strong>
-    </span>
-  </p>
 </header>
+
+<div class="intro-deck">
+  <p>We're investigating illegal dumping across the Mojave Desert and Antelope Valley in Kern, Los Angeles, Riverside, and San Bernardino Counties. Your photos and videos could be critical evidence.</p>
+  <span class="signal-cta">💬 Have a tip? Reach us securely on Signal: <strong>jacobmargolis.01</strong></span>
+</div>
 
 <main class="wrap">
   <div id="form-screen">
@@ -543,8 +634,30 @@ document.getElementById('faq-email').textContent = CFG.CONTACT_EMAIL;
 if (CFG.TEST_MODE) document.getElementById('test-banner').classList.add('on');
 
 /* ================================================================
-   STATE
+   DEVICE & BROWSER INFO
+   Device ID persists in localStorage — survives app closes and
+   relaunches, resets only if user clears browser storage.
+   Use the Device ID column in the Sheet to spot repeat submitters.
 ================================================================ */
+function getDeviceId() {
+  try {
+    let id = localStorage.getItem('mojave_device_id');
+    if (!id) {
+      id = 'D' + Date.now().toString(36).toUpperCase() +
+           Math.random().toString(36).slice(2, 7).toUpperCase();
+      localStorage.setItem('mojave_device_id', id);
+    }
+    return id;
+  } catch (e) { return 'unavailable'; }
+}
+
+const BROWSER = {
+  deviceId:  getDeviceId(),
+  userAgent: navigator.userAgent,
+  screenRes: screen.width + 'x' + screen.height,
+  timezone:  Intl.DateTimeFormat().resolvedOptions().timeZone,
+  language:  navigator.language,
+};
 let FILES = [];       // Array of file-state objects
 let GPS_CACHE = { status: 'idle', coords: null }; // browser GPS: idle|pending|granted|denied
 let termsOk   = false;
@@ -593,11 +706,15 @@ function addFiles(newFiles) {
 
     FILES.push({
       id, file,
-      status:    tooBig ? 'too-large' : 'checking',
-      gps:       null,
-      gpsSource: null,
-      dateTaken: null,
-      previewUrl: null,
+      status:      tooBig ? 'too-large' : 'checking',
+      gps:         null,
+      gpsAltitude: null,
+      gpsAccuracy: null,
+      gpsSource:   null,
+      dateTaken:   null,
+      previewUrl:  null,
+      cameraMake:  '',
+      cameraModel: '',
     });
 
     renderFiles();
@@ -629,9 +746,16 @@ async function processFile(id) {
       if (exif) {
         const dt = exif.DateTimeOriginal || exif.CreateDate || exif.DateTime;
         if (dt) fi.dateTaken = new Date(dt);
+
+        /* Camera info */
+        fi.cameraMake  = exif.Make  || '';
+        fi.cameraModel = exif.Model || '';
+
+        /* GPS */
         if (exif.latitude != null && exif.longitude != null) {
-          fi.gps       = { lat: exif.latitude, lng: exif.longitude };
-          fi.gpsSource = 'exif';
+          fi.gps          = { lat: exif.latitude, lng: exif.longitude };
+          fi.gpsAltitude  = exif.GPSAltitude != null ? Math.round(exif.GPSAltitude) : null;
+          fi.gpsSource    = 'exif';
         }
       }
     } catch (e) { /* silent */ }
@@ -644,8 +768,10 @@ async function processFile(id) {
 
   // No EXIF GPS — use browser GPS
   if (GPS_CACHE.status === 'granted') {
-    fi.gps       = GPS_CACHE.coords;
-    fi.gpsSource = 'browser';
+    fi.gps         = GPS_CACHE.coords;
+    fi.gpsAltitude = GPS_CACHE.altitude || null;
+    fi.gpsAccuracy = GPS_CACHE.accuracy || null;
+    fi.gpsSource   = 'browser';
     finalizeFile(id);
   } else if (GPS_CACHE.status === 'denied') {
     fi.status = CFG.TEST_MODE ? 'no-gps-warn' : 'no-gps';
@@ -659,8 +785,10 @@ async function processFile(id) {
       if (GPS_CACHE.status !== 'pending') {
         clearInterval(wait);
         if (GPS_CACHE.status === 'granted') {
-          fi.gps       = GPS_CACHE.coords;
-          fi.gpsSource = 'browser';
+          fi.gps         = GPS_CACHE.coords;
+          fi.gpsAltitude = GPS_CACHE.altitude || null;
+          fi.gpsAccuracy = GPS_CACHE.accuracy || null;
+          fi.gpsSource   = 'browser';
           finalizeFile(id);
         } else {
           fi.status = CFG.TEST_MODE ? 'no-gps-warn' : 'no-gps';
@@ -682,8 +810,13 @@ function requestBrowserGPS(triggeringId) {
   }
   navigator.geolocation.getCurrentPosition(
     pos => {
-      GPS_CACHE = { status: 'granted', coords: { lat: pos.coords.latitude, lng: pos.coords.longitude } };
-      applyBrowserGPSResult(GPS_CACHE.coords);
+      GPS_CACHE = {
+        status: 'granted',
+        coords: { lat: pos.coords.latitude, lng: pos.coords.longitude },
+        altitude: pos.coords.altitude != null ? Math.round(pos.coords.altitude) : null,
+        accuracy: pos.coords.accuracy  != null ? Math.round(pos.coords.accuracy) : null,
+      };
+      applyBrowserGPSResult(GPS_CACHE);
     },
     () => {
       GPS_CACHE = { status: 'denied', coords: null };
@@ -693,13 +826,15 @@ function requestBrowserGPS(triggeringId) {
   );
 }
 
-function applyBrowserGPSResult(coords) {
+function applyBrowserGPSResult(cache) {
   FILES.forEach(fi => {
     if (fi.status !== 'checking') return;
-    if (coords) {
-      fi.gps       = coords;
-      fi.gpsSource = 'browser';
-      finalizeFile(fi.id, true); // skipRender until end
+    if (cache && cache.coords) {
+      fi.gps         = cache.coords;
+      fi.gpsAltitude = cache.altitude || null;
+      fi.gpsAccuracy = cache.accuracy || null;
+      fi.gpsSource   = 'browser';
+      finalizeFile(fi.id, true);
     } else {
       fi.status = CFG.TEST_MODE ? 'no-gps-warn' : 'no-gps';
     }
@@ -925,19 +1060,35 @@ async function sendFile(url, payload, onEncodeProgress) {
   const b64 = await toBase64WithProgress(payload.file, onEncodeProgress);
 
   const body = JSON.stringify({
+    /* File */
     filename:      payload.file.name,
     mimeType:      payload.file.type,
     fileData:      b64,
+    /* Location */
     latitude:      payload.gps ? payload.gps.lat : null,
     longitude:     payload.gps ? payload.gps.lng : null,
-    gpsSource:     payload.gpsSource,
+    gpsAltitude:   payload.gpsAltitude || null,
+    gpsAccuracy:   payload.gpsAccuracy || null,
+    gpsSource:     payload.gpsSource   || null,
+    /* Dates */
     dateTaken:     (payload.dateTaken || new Date()).toISOString(),
     dateSubmitted: new Date().toISOString(),
+    /* Camera */
+    cameraMake:    payload.cameraMake  || '',
+    cameraModel:   payload.cameraModel || '',
+    /* Contact */
     contactName:   payload.contact.name,
     contactEmail:  payload.contact.email,
     contactPhone:  payload.contact.phone,
     contactSignal: payload.contact.signal,
     notes:         payload.contact.notes,
+    /* Device fingerprint */
+    deviceId:      BROWSER.deviceId,
+    userAgent:     BROWSER.userAgent,
+    screenRes:     BROWSER.screenRes,
+    timezone:      BROWSER.timezone,
+    language:      BROWSER.language,
+    /* Meta */
     testMode:      CFG.TEST_MODE,
     submissionKey: CFG.SUBMISSION_KEY,
   });
